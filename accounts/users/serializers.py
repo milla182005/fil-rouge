@@ -9,6 +9,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'password')
 
     def create(self, validated_data):
+        """
+        Crée un utilisateur avec mot de passe haché.
+        """
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
