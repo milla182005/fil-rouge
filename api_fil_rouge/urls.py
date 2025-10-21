@@ -10,6 +10,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Tous les endpoints de l'app "users" se trouvent maintenant sous /api/users/
-    path('api/', include('accounts.users.urls')),
+    path('api/users/', include('accounts.users.urls')),
+    path('api/auth/', include('accounts.authentication.urls')),
 ]

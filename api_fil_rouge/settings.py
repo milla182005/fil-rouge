@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     # Ton app principale
-    'accounts.users',  
+    'accounts.users',
+    'accounts.authentication',  
 ]
 
 # 🛡️ Middleware
