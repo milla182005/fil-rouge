@@ -11,21 +11,21 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-# 🔑 Charger les variables depuis le .env
+#  Charger les variables depuis le .env
 load_dotenv()
 
-# 📂 Chemins de base
+#  Chemins de base
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 🔐 Secrets et config
+#  Secrets et config
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 DATABASE_NAME = os.getenv("DATABASE_NAME", BASE_DIR / "db.sqlite3")
 
-# 🌐 Hôtes autorisés
+#  Hôtes autorisés
 ALLOWED_HOSTS = []
 
-# 🧩 Applications installées
+#  Applications installées
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,14 +37,14 @@ INSTALLED_APPS = [
     # Apps tierces
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',  # ✅ Pour le logout JWT
+    'rest_framework_simplejwt.token_blacklist',  #  Pour le logout JWT
 
     # Tes apps
     'accounts.users',
     'accounts.authentication',
 ]
 
-# 🛡️ Middleware
+#  Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -55,10 +55,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# 🔗 URL principale
+#  URL principale
 ROOT_URLCONF = 'api_fil_rouge.urls'
 
-# 🖼️ Templates
+#  Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -77,7 +77,7 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'api_fil_rouge.wsgi.application'
 
-# 🗃️ Base de données SQLite
+#  Base de données SQLite
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -85,7 +85,7 @@ DATABASES = {
     }
 }
 
-# 🔑 Validation des mots de passe
+#  Validation des mots de passe
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -93,19 +93,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# 🌍 Langue et fuseau horaire
+#  Langue et fuseau horaire
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
 
-# 🖼️ Fichiers statiques
+#  Fichiers statiques
 STATIC_URL = 'static/'
 
-# 🔢 Clé primaire par défaut
+#  Clé primaire par défaut
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 🔐 Django REST Framework + JWT
+#  Django REST Framework + JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -115,7 +115,7 @@ REST_FRAMEWORK = {
     ),
 }
 
-# ⏳ Configuration JWT
+#  Configuration JWT
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -124,5 +124,5 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ⚙️ Si tu crées un modèle utilisateur personnalisé
+#  Si tu crées un modèle utilisateur personnalisé
 # AUTH_USER_MODEL = 'accounts.users.User'  # à décommenter si tu as un modèle custom

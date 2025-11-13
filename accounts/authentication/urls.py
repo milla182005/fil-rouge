@@ -1,11 +1,25 @@
 from django.urls import path
-from .views import RegisterView, MyTokenObtainPairView, LogoutView , ChangePasswordView
+from .views import (
+    RegisterView,
+    MyTokenObtainPairView,
+    LogoutView,
+    ChangePasswordView,
+    BanUserView,
+)
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='auth_register'),
-    path('login/', MyTokenObtainPairView.as_view(), name='auth_login'),
-    path('logout/', LogoutView.as_view(), name='auth_logout'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('change-password/', ChangePasswordView.as_view(), name='auth_change_password'),
+    # -------------------------------
+    # Endpoints Authentification
+    # -------------------------------
+    path('register/', RegisterView.as_view(), name='auth_register'),           # Inscription
+    path('login/', MyTokenObtainPairView.as_view(), name='auth_login'),        # Connexion (JWT)
+    path('logout/', LogoutView.as_view(), name='auth_logout'),                 # Déconnexion
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh token
+    path('change-password/', ChangePasswordView.as_view(), name='auth_change_password'),  # Changement de mot de passe
+
+    # -------------------------------
+    # Endpoint RBAC : admin uniquement
+    # -------------------------------
+    path('ban-user/<int:user_id>/', BanUserView.as_view(), name='ban_user'),   # Bannir un utilisateur
 ]
