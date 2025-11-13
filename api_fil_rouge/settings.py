@@ -37,10 +37,11 @@ INSTALLED_APPS = [
     # Apps tierces
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # ✅ Pour le logout JWT
 
-    # Ton app principale
+    # Tes apps
     'accounts.users',
-    'accounts.authentication',  
+    'accounts.authentication',
 ]
 
 # 🛡️ Middleware
