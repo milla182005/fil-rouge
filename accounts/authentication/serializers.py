@@ -11,6 +11,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
+        ref_name = 'AuthenticationRegister'  # Nom unique pour Swagger
         model = User
         fields = ('username', 'email', 'password', 'password2')
         extra_kwargs = {'email': {'required': True}}
