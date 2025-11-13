@@ -136,7 +136,11 @@ class CookieTokenRefreshView(TokenRefreshView):
         # Récupère le refresh token depuis le cookie
         refresh_token = request.COOKIES.get('refresh_token')
         
+        data = {}
         if refresh_token:
-            request.data['refresh'] = refresh_token
-        
-        return super().post(request, *args, **kwargs)
+            data['refresh'] = refresh_token
+
+        # Appelle la vue parent avec un dictionnaire mutable
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
