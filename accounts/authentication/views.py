@@ -77,15 +77,23 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='Refresh token (pour Swagger uniquement)')
+            },
+            required=[]
+        ),
         responses={
             205: "Déconnexion réussie",
             400: "Refresh token manquant ou invalide"
         }
     )
     def post(self, request):
-        refresh_token = request.COOKIES.get('refresh_token')
+        # Lire le refresh token depuis le cookie ou le body (pour Swagger)
+        refresh_token = request.COOKIES.get('refresh_token') or request.data.get('refresh')
         if not refresh_token:
-            return Response({"error": "Refresh token non trouvé."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Refresh token manquant ou invalide."}, status=status.HTTP_400_BAD_REQUEST)
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
@@ -93,7 +101,7 @@ class LogoutView(APIView):
             response.delete_cookie('refresh_token')
             return response
         except Exception:
-            return Response({"error": "Token invalide ou déjà blacklisté."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Refresh token invalide ou déjà blacklisté."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # -------------------------------
@@ -157,17 +165,24 @@ class BanUserView(APIView):
 
 
 # -------------------------------
-# Refresh token depuis cookie
+# Refresh token depuis cookie ou body (Swagger)
 # -------------------------------
 class CookieTokenRefreshView(TokenRefreshView):
     @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='Refresh token')
+            },
+            required=[]
+        ),
         responses={
             200: "Token rafraîchi avec succès",
             401: "Refresh token invalide"
         }
     )
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get('refresh_token')
+        refresh_token = request.COOKIES.get('refresh_token') or request.data.get('refresh')
         data = {}
         if refresh_token:
             data['refresh'] = refresh_token
