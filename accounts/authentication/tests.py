@@ -7,12 +7,16 @@ import json
 class AuthTests(TestCase):
     def setUp(self):
         self.client = Client()
-        # Utilisateurs pour les tests
+        # Utilisateurs pour les tests (mots de passe conformes)
         self.admin_user = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="Admin1234"
+            username="admin",
+            email="admin@example.com",
+            password="Admin1234!"  # Mot de passe conforme : majuscule, minuscule, chiffre, symbole
         )
         self.normal_user = User.objects.create_user(
-            username="user1", email="user1@example.com", password="User1234"
+            username="user1",
+            email="user1@example.com",
+            password="User1234!"  # Mot de passe conforme
         )
 
     # -------------------------------
@@ -23,8 +27,8 @@ class AuthTests(TestCase):
         data = {
             "username": "newuser",
             "email": "newuser@example.com",
-            "password": "TestPass123",
-            "password2": "TestPass123"
+            "password": "NewPass123!",  # Mot de passe conforme
+            "password2": "NewPass123!"
         }
         response = self.client.post(url, data=json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -35,7 +39,7 @@ class AuthTests(TestCase):
     # -------------------------------
     def test_login_user(self):
         url = reverse("auth_login")
-        data = {"username": "user1", "password": "User1234"}
+        data = {"username": "user1", "password": "User1234!"}
         response = self.client.post(url, data=json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.json())
@@ -44,10 +48,10 @@ class AuthTests(TestCase):
     # Test Logout
     # -------------------------------
     def test_logout_user(self):
-        login_url = reverse("auth_login")
-        login_resp = self.client.post(login_url, data=json.dumps({"username": "user1", "password": "User1234"}), content_type="application/json")
+        login_resp = self.client.post(reverse("auth_login"), 
+                                      data=json.dumps({"username": "user1", "password": "User1234!"}), 
+                                      content_type="application/json")
         access_token = login_resp.json()["access"]
-
         self.client.cookies["refresh_token"] = login_resp.cookies.get("refresh_token").value
 
         logout_url = reverse("auth_logout")
@@ -58,9 +62,9 @@ class AuthTests(TestCase):
     # Test Refresh Token
     # -------------------------------
     def test_refresh_token(self):
-        login_url = reverse("auth_login")
-        login_resp = self.client.post(login_url, data=json.dumps({"username": "user1", "password": "User1234"}), content_type="application/json")
-
+        login_resp = self.client.post(reverse("auth_login"), 
+                                      data=json.dumps({"username": "user1", "password": "User1234!"}), 
+                                      content_type="application/json")
         self.client.cookies["refresh_token"] = login_resp.cookies.get("refresh_token").value
         refresh_url = reverse("token-refresh")
         response = self.client.post(refresh_url)
@@ -71,12 +75,13 @@ class AuthTests(TestCase):
     # Test Change Password
     # -------------------------------
     def test_change_password(self):
-        login_url = reverse("auth_login")
-        login_resp = self.client.post(login_url, data=json.dumps({"username": "user1", "password": "User1234"}), content_type="application/json")
+        login_resp = self.client.post(reverse("auth_login"), 
+                                      data=json.dumps({"username": "user1", "password": "User1234!"}), 
+                                      content_type="application/json")
         access_token = login_resp.json()["access"]
 
         url = reverse("auth_change_password")
-        data = {"old_password": "User1234", "new_password": "NewPass1234"}
+        data = {"old_password": "User1234!", "new_password": "NewPass123!"}
         response = self.client.post(url, data=json.dumps(data), content_type="application/json",
                                     HTTP_AUTHORIZATION=f"Bearer {access_token}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -85,7 +90,9 @@ class AuthTests(TestCase):
     # Test Ban User by Admin
     # -------------------------------
     def test_ban_user_by_admin(self):
-        login_resp = self.client.post(reverse("auth_login"), data=json.dumps({"username": "admin", "password": "Admin1234"}), content_type="application/json")
+        login_resp = self.client.post(reverse("auth_login"), 
+                                      data=json.dumps({"username": "admin", "password": "Admin1234!"}), 
+                                      content_type="application/json")
         access_token = login_resp.json()["access"]
 
         url = reverse("ban_user", args=[self.normal_user.id])
@@ -98,7 +105,9 @@ class AuthTests(TestCase):
     # Test Ban User by Non-Admin
     # -------------------------------
     def test_ban_user_by_non_admin(self):
-        login_resp = self.client.post(reverse("auth_login"), data=json.dumps({"username": "user1", "password": "User1234"}), content_type="application/json")
+        login_resp = self.client.post(reverse("auth_login"), 
+                                      data=json.dumps({"username": "user1", "password": "User1234!"}), 
+                                      content_type="application/json")
         access_token = login_resp.json()["access"]
 
         url = reverse("ban_user", args=[self.admin_user.id])
