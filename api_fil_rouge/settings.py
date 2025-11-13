@@ -1,8 +1,5 @@
 """
 Django settings for api_fil_rouge project.
-
-Généré avec Django 5.2.7
-Documentation : https://docs.djangoproject.com/en/5.2/topics/settings/
 """
 
 from pathlib import Path
@@ -18,7 +15,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "True") == "True"
 DATABASE_NAME = os.getenv("DATABASE_NAME", BASE_DIR / "db.sqlite3")
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
@@ -37,12 +34,11 @@ INSTALLED_APPS = [
 
     # Apps tierces
     'rest_framework',
-    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
-    'corsheaders',  # ✅ pour la gestion des cookies et CORS
+    'corsheaders',
 
-    # Tes applications internes
+    # Apps internes
     'accounts.users',
     'accounts.authentication',
 ]
@@ -51,7 +47,7 @@ INSTALLED_APPS = [
 # Middleware
 # ------------------------------------------------------------
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # ✅ doit être placé en tout premier
+    'corsheaders.middleware.CorsMiddleware',  # Doit être en premier
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,10 +58,9 @@ MIDDLEWARE = [
 ]
 
 # ------------------------------------------------------------
-# Configuration CORS et cookies
+# CORS et cookies
 # ------------------------------------------------------------
 CORS_ALLOW_CREDENTIALS = True
-
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
@@ -73,13 +68,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-CSRF_COOKIE_SECURE = False          # True en production (HTTPS)
-SESSION_COOKIE_SECURE = False       # True en production
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"
 
 # ------------------------------------------------------------
-# URL et Templates
+# URLs et templates
 # ------------------------------------------------------------
 ROOT_URLCONF = 'api_fil_rouge.urls'
 
@@ -112,14 +107,13 @@ DATABASES = {
 }
 
 # ------------------------------------------------------------
-# Validation des mots de passe
+# Validators mot de passe
 # ------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
     {'NAME': 'accounts.authentication.validators.CustomPasswordValidator'},
 ]
 
@@ -132,14 +126,13 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------------------------------------
-# Fichiers statiques
+# Statics
 # ------------------------------------------------------------
 STATIC_URL = 'static/'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ------------------------------------------------------------
-# Django REST Framework
+# DRF + JWT
 # ------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -150,9 +143,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-# ------------------------------------------------------------
-# Configuration JWT
-# ------------------------------------------------------------
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -163,6 +153,16 @@ SIMPLE_JWT = {
 }
 
 # ------------------------------------------------------------
-# Utilisateur personnalisé (si tu en as un)
+# Swagger
 # ------------------------------------------------------------
-# AUTH_USER_MODEL = 'accounts.users.User'
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "description": "JWT Authorization header using the Bearer scheme. Exemple: 'Bearer <token>'",
+            "name": "Authorization",
+            "in": "header",
+        }
+    },
+    "USE_SESSION_AUTH": False,
+}
