@@ -5,6 +5,7 @@ from .views import (
     LogoutView,
     ChangePasswordView,
     BanUserView,
+    CookieTokenRefreshView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -15,7 +16,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),           # Inscription
     path('login/', MyTokenObtainPairView.as_view(), name='auth_login'),        # Connexion (JWT)
     path('logout/', LogoutView.as_view(), name='auth_logout'),                 # Déconnexion
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh token
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token-refresh'),  # Refresh token
     path('change-password/', ChangePasswordView.as_view(), name='auth_change_password'),  # Changement de mot de passe
 
     # -------------------------------

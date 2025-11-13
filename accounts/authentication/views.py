@@ -5,6 +5,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from .serializers import RegisterSerializer, MyTokenObtainPairSerializer, ChangePasswordSerializer
 
@@ -22,6 +23,28 @@ class RegisterView(generics.CreateAPIView):
 # -------------------------------
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        # Récupère le refresh token de la réponse
+        refresh_token = response.data.get('refresh')
+        
+        if refresh_token:
+            # Supprime le refresh token du body JSON
+            response.data.pop('refresh')
+            
+            # Stocke le refresh token dans un cookie HTTP-only sécurisé
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,  # Inaccessible via JavaScript
+                secure=False,   # True en production (HTTPS uniquement)
+                samesite='Lax', # Protection CSRF
+                max_age=60*60*24*7  # 7 jours
+            )
+        
+        return response
 
 
 # -------------------------------
@@ -31,16 +54,35 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        refresh_token = request.data.get("refresh", None)
+        # Récupère le refresh token depuis le cookie
+        refresh_token = request.COOKIES.get('refresh_token')
+        
         if not refresh_token:
-            return Response({"error": "Refresh token non fourni."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Refresh token non trouvé."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         try:
             token = RefreshToken(refresh_token)
-            token.blacklist()  # rend le refresh token invalide
-            return Response({"message": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
-        except Exception:
-            return Response({"error": "Token invalide ou déjà blacklisté."}, status=status.HTTP_400_BAD_REQUEST)
-
+            token.blacklist()
+            
+            # Crée la réponse
+            response = Response(
+                {"message": "Déconnexion réussie."}, 
+                status=status.HTTP_205_RESET_CONTENT
+            )
+            
+            # Supprime le cookie
+            response.delete_cookie('refresh_token')
+            
+            return response
+            
+        except Exception as e:
+            return Response(
+                {"error": "Token invalide ou déjà blacklisté."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 # -------------------------------
 # Endpoint pour changer le mot de passe
@@ -87,3 +129,14 @@ class BanUserView(APIView):
             {"message": f"L'utilisateur {user_to_ban.username} a été banni par {request.user.username}."},
             status=status.HTTP_200_OK
         )
+
+
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        # Récupère le refresh token depuis le cookie
+        refresh_token = request.COOKIES.get('refresh_token')
+        
+        if refresh_token:
+            request.data['refresh'] = refresh_token
+        
+        return super().post(request, *args, **kwargs)
