@@ -37,3 +37,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['email'] = user.email
         return token
+
+
+# Serializer pour changer le mot de passe
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        # Vérifie que le nouveau mot de passe respecte les règles de Django
+        validate_password(value)
+        return value
