@@ -7,7 +7,8 @@ from .views import (
     BanUserView,
     CookieTokenRefreshView,
     MeView,
-    ListUsersView 
+    ListUsersView,
+    WeatherView 
 )
 
 urlpatterns = [
@@ -22,6 +23,7 @@ urlpatterns = [
 
     path('me/', MeView.as_view(), name='auth_me'),
     path('users/', ListUsersView.as_view(), name='auth_users'),
+    path('weather/<str:city>/', WeatherView.as_view(), name='weather'),
 
     # -------------------------------
     # Admin only

@@ -52,3 +52,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         # Vérifie que le nouveau mot de passe respecte les règles de Django
         validate_password(value)
         return value
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'is_active']

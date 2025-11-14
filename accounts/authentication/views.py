@@ -1,3 +1,4 @@
+import requests
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +13,8 @@ from drf_yasg import openapi
 from .serializers import (
     RegisterSerializer, 
     MyTokenObtainPairSerializer, 
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    UserListSerializer
 )
 
 # ==========================================
@@ -210,6 +212,7 @@ class MeView(APIView):
 # ==========================================
 class ListUsersView(generics.ListAPIView):
     queryset = User.objects.all()
+    serializer_class = UserListSerializer
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
@@ -228,3 +231,38 @@ class ListUsersView(generics.ListAPIView):
         users = [{"id": u.id, "username": u.username, "email": u.email, "is_active": u.is_active}
                  for u in self.get_queryset()]
         return Response(users)
+
+# ==========================================
+# /weather/<city>/ — météo pour une ville
+# ==========================================
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+import requests
+
+class WeatherView(APIView):
+    permission_classes = [AllowAny]  # public
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT (optionnel)",
+                type=openapi.TYPE_STRING,
+                required=False
+            )
+        ],
+        responses={
+            200: "Données météo récupérées",
+            404: "Ville non trouvée"
+        }
+    )
+    def get(self, request, city):
+        api_key = "b224801a8cac5f63451583ccd8d502d6"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=fr"
+        r = requests.get(url)
+        if r.status_code == 200:
+            return Response(r.json())
+        return Response({"error": "Ville non trouvée ou API indisponible"}, status=r.status_code)
