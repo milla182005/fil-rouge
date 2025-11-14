@@ -74,7 +74,7 @@ class AuthTests(TestCase):
             content_type="application/json"
         )
         self.client.cookies["refresh_token"] = login_resp.cookies.get("refresh_token").value
-        refresh_url = reverse("token-refresh")
+        refresh_url = reverse("token_refresh")  # ✅ corrigé pour correspondre à urls.py
         response = self.client.post(refresh_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.json())

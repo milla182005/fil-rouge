@@ -15,30 +15,24 @@ from .serializers import (
     ChangePasswordSerializer
 )
 
-# =====================================================================================
+# ==========================================
 # REGISTER
-# =====================================================================================
+# ==========================================
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
         request_body=RegisterSerializer,
-        responses={
-            201: openapi.Response(
-                description="Utilisateur créé avec succès",
-                examples={"application/json": {"username": "newuser", "email": "new@example.com"}}
-            ),
-            400: "Erreur de validation"
-        }
+        responses={201: "Utilisateur créé", 400: "Erreur de validation"}
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
 
-# =====================================================================================
-# LOGIN — Génère access + refresh (cookie HTTPonly)
-# =====================================================================================
+# ==========================================
+# LOGIN
+# ==========================================
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -49,33 +43,30 @@ class MyTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         refresh_token = response.data.get('refresh')
-
         if refresh_token:
             response.data.pop('refresh')
             response.set_cookie(
                 key='refresh_token',
                 value=refresh_token,
                 httponly=True,
-                secure=False,  # mettre True en production HTTPS
+                secure=False,
                 samesite='Lax',
-                max_age=60 * 60 * 24 * 7,
+                max_age=60*60*24*7
             )
-
         return response
 
 
-# =====================================================================================
-# LOGOUT — supprime et blacklist le refresh token
-# =====================================================================================
+# ==========================================
+# LOGOUT
+# ==========================================
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                'Authorization',
-                openapi.IN_HEADER,
-                description="Token d'accès JWT: Bearer <token>",
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT Bearer <token>",
                 type=openapi.TYPE_STRING,
                 required=True
             )
@@ -84,33 +75,29 @@ class LogoutView(APIView):
     )
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token') or request.data.get('refresh')
-
         if not refresh_token:
             return Response({"error": "Refresh token manquant."}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
             response = Response({"message": "Déconnexion réussie."}, status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
             return response
-
         except Exception:
             return Response({"error": "Refresh token invalide."}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# =====================================================================================
+# ==========================================
 # CHANGE PASSWORD
-# =====================================================================================
+# ==========================================
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                'Authorization',
-                openapi.IN_HEADER,
-                description="Token d'accès JWT: Bearer <token>",
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT Bearer <token>",
                 type=openapi.TYPE_STRING,
                 required=True
             )
@@ -121,58 +108,49 @@ class ChangePasswordView(APIView):
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         user = request.user
-
         if serializer.is_valid():
             old_password = serializer.validated_data["old_password"]
             new_password = serializer.validated_data["new_password"]
-
             if not user.check_password(old_password):
-                return Response({"old_password": "Mot de passe actuel incorrect."},
-                                status=status.HTTP_400_BAD_REQUEST)
-
+                return Response({"old_password": "Mot de passe incorrect."}, status=400)
             user.set_password(new_password)
             user.save()
-            return Response({"message": "Mot de passe changé avec succès."})
+            return Response({"message": "Mot de passe changé."})
+        return Response(serializer.errors, status=400)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# =====================================================================================
-# BAN USER — ADMIN ONLY
-# =====================================================================================
+# ==========================================
+# BAN USER (ADMIN)
+# ==========================================
 class BanUserView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                'Authorization',
-                openapi.IN_HEADER,
-                description="Token d'accès JWT Admin: Bearer <token>",
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT Admin Bearer <token>",
                 type=openapi.TYPE_STRING,
                 required=True
             )
         ],
-        responses={200: "Utilisateur banni", 403: "Impossible de bannir un admin", 404: "Utilisateur introuvable"}
+        responses={200: "Utilisateur banni", 403: "Impossible de bannir un admin", 404: "Utilisateur non trouvé"}
     )
     def post(self, request, user_id):
         try:
             user_to_ban = User.objects.get(pk=user_id)
         except ObjectDoesNotExist:
-            return Response({"error": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
-
+            return Response({"error": "Utilisateur non trouvé."}, status=404)
         if user_to_ban.is_staff:
-            return Response({"error": "Impossible de bannir un administrateur."}, status=status.HTTP_403_FORBIDDEN)
-
+            return Response({"error": "Impossible de bannir un admin."}, status=403)
         user_to_ban.is_active = False
         user_to_ban.save()
-
         return Response({"message": f"L'utilisateur {user_to_ban.username} a été banni."})
 
 
-# =====================================================================================
-# REFRESH TOKEN (depuis cookie ou body)
-# =====================================================================================
+# ==========================================
+# REFRESH TOKEN
+# ==========================================
 class CookieTokenRefreshView(TokenRefreshView):
 
     @swagger_auto_schema(
@@ -183,9 +161,8 @@ class CookieTokenRefreshView(TokenRefreshView):
         ),
         manual_parameters=[
             openapi.Parameter(
-                'Authorization',
-                openapi.IN_HEADER,
-                description="Token d'accès JWT (optionnel)",
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT (optionnel)",
                 type=openapi.TYPE_STRING,
                 required=False
             )
@@ -194,27 +171,23 @@ class CookieTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         refresh = request.COOKIES.get("refresh_token") or request.data.get("refresh")
-        data = {}
-        if refresh:
-            data["refresh"] = refresh
-
+        data = {"refresh": refresh} if refresh else {}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
 
 
-# =====================================================================================
+# ==========================================
 # /auth/me — utilisateur connecté
-# =====================================================================================
+# ==========================================
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                'Authorization',
-                openapi.IN_HEADER,
-                description="Token d'accès JWT: Bearer <token>",
+                'Authorization', openapi.IN_HEADER,
+                description="Token JWT Bearer <token>",
                 type=openapi.TYPE_STRING,
                 required=True
             )
@@ -232,9 +205,9 @@ class MeView(APIView):
         })
 
 
-# =====================================================================================
-# /auth/users — list users (admin)
-# =====================================================================================
+# ==========================================
+# /auth/users — liste utilisateurs (ADMIN)
+# ==========================================
 class ListUsersView(generics.ListAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
@@ -244,7 +217,7 @@ class ListUsersView(generics.ListAPIView):
             openapi.Parameter(
                 'Authorization',
                 openapi.IN_HEADER,
-                description="Token d'accès JWT Admin: Bearer <token>",
+                description="Token JWT Admin Bearer <token>",
                 type=openapi.TYPE_STRING,
                 required=True
             )
@@ -252,8 +225,6 @@ class ListUsersView(generics.ListAPIView):
         responses={200: "Liste des utilisateurs"}
     )
     def list(self, request, *args, **kwargs):
-        users = [
-            {"id": u.id, "username": u.username, "email": u.email, "is_active": u.is_active}
-            for u in self.get_queryset()
-        ]
+        users = [{"id": u.id, "username": u.username, "email": u.email, "is_active": u.is_active}
+                 for u in self.get_queryset()]
         return Response(users)

@@ -9,24 +9,22 @@ from .views import (
     MeView,
     ListUsersView 
 )
-from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
+    # -------------------------------
+    # Auth endpoints
+    # -------------------------------
+    path('register/', RegisterView.as_view(), name='auth_register'),
+    path('login/', MyTokenObtainPairView.as_view(), name='auth_login'),
+    path('logout/', LogoutView.as_view(), name='auth_logout'),
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('change-password/', ChangePasswordView.as_view(), name='auth_change_password'),
+
+    path('me/', MeView.as_view(), name='auth_me'),
+    path('users/', ListUsersView.as_view(), name='auth_users'),
 
     # -------------------------------
-    # Endpoints Authentification
+    # Admin only
     # -------------------------------
-    path('register/', RegisterView.as_view(), name='auth_register'),           # Inscription
-    path('login/', MyTokenObtainPairView.as_view(), name='auth_login'),        # Connexion (JWT)
-    path('logout/', LogoutView.as_view(), name='auth_logout'),                 # Déconnexion
-    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token-refresh'),  # Refresh token
-    path('change-password/', ChangePasswordView.as_view(), name='auth_change_password'),  # Changement de mot de passe
-
-    path("me/", MeView.as_view(), name="auth_me"),
-    path("users/", ListUsersView.as_view(), name="auth_users"),
-
-    # -------------------------------
-    # Endpoint RBAC : admin uniquement
-    # -------------------------------
-    path('ban-user/<int:user_id>/', BanUserView.as_view(), name='ban_user'),   # Bannir un utilisateur
+    path('ban-user/<int:user_id>/', BanUserView.as_view(), name='ban_user'),
 ]
